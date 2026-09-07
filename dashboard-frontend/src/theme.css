@@ -4,16 +4,16 @@
   --font-sans: "Inter", "Plus Jakarta Sans", system-ui, sans-serif;
 
   /* ---------- Brand Colors (Indigo) ---------- */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
+  --color-brand-50:  #f0f9f8;
+  --color-brand-100: #dcf0ee;
+  --color-brand-200: #b9e1dc;
+  --color-brand-300: #8ecac2;
+  --color-brand-400: #5aaba1;
+  --color-brand-500: #3d8f85;
+  --color-brand-600: #2f7169;
+  --color-brand-700: #275a54;
+  --color-brand-800: #204743;
+  --color-brand-900: #1a3936; 
 
   /* ---------- Shadows ---------- */
   --shadow-soft:

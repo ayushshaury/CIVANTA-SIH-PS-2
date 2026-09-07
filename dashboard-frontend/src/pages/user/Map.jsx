@@ -1,5 +1,4 @@
 import MapView from "../../components/maps/MapView";
-import { mockSubmissions } from "../../data/mockData";
 
 export default function Map() {
   return (
@@ -9,10 +8,11 @@ export default function Map() {
           Live Map View
         </h1>
         <p className="text-sm text-slate-500">
-          Track all submissions across India in real-time.
+          Road risk, incidents, and vehicle GPS traces across the
+          Assam–Arunachal Pradesh corridor.
         </p>
       </div>
-      <MapView submissions={mockSubmissions} height="600px" />
+      <MapView height="600px" />
     </div>
   );
 }
