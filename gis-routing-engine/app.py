@@ -23,6 +23,46 @@ st.set_page_config(
     layout="wide"
 )
 
+# =========================================================
+# GOOGLE AUTHENTICATION
+# =========================================================
+
+if not st.user.is_logged_in:
+
+    st.title("🔐 CIVANTA Logistics Intelligence")
+
+    st.subheader("Google Login Required")
+
+    st.write(
+        "Please sign in with your Google account to access "
+        "the NER Logistics Accessibility & Risk-Aware Routing System."
+    )
+
+    st.button(
+        "🔵 Continue with Google",
+        on_click=st.login
+    )
+
+    st.stop()
+
+
+# =========================================================
+# LOGGED-IN USER INFORMATION
+# =========================================================
+
+st.sidebar.success(
+    f"Logged in as: {st.user.name}"
+)
+
+st.sidebar.caption(
+    st.user.email
+)
+
+if st.sidebar.button("🚪 Logout"):
+
+    st.logout()
+
+
 
 # =========================================================
 # 2. TITLE
