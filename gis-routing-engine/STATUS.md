@@ -134,22 +134,47 @@ For integration into the main backend, the core routing logic in app.py can be s
 
 The expected integration flow is:
 
-User / Backend
-      ↓
+User
+ │
+ ▼
+Google Authentication
+ │
+ ▼
 Start + Destination Coordinates
-      ↓
+ │
+ ▼
 OpenStreetMap Road Network
-      ↓
+ │
+ ▼
+OSMnx Graph Processing
+ │
+ ▼
+Nearest Road Nodes
+ │
+ ▼
 Road ID Matching
-      ↓
+ │
+ ▼
 ML Risk Database
-      ↓
-Risk-Aware Routing
-      ↓
-Route + Distance + Risk Information
-      ↓
-Frontend / Dashboard
-
+ │
+ ▼
+Risk + Disruption Assignment
+ │
+ ├──────────────────────┐
+ ▼                      ▼
+Standard Route      Risk-Aware Route
+ │                      │
+ ▼                      ▼
+Distance            Distance
+Average Risk       Average Risk
+Disruptions        Disruptions
+ │                      │
+ └──────────┬───────────┘
+            ▼
+     Route Comparison
+            │
+            ▼
+    Interactive GIS Map
 The ML team's road_risk_scores.csv acts as the risk input, while this module is responsible for:
 
 GIS road-network processing
