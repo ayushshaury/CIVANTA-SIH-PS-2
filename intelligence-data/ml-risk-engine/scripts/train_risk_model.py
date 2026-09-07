@@ -1,17 +1,3 @@
-"""
-train_risk_model_final.py
-
-PS 26002 - Person 3 (ML/Risk Engine). Merged final version:
-- Keeps everything from the earlier "OLD" script that the rules require
-  (multi-model comparison, rule-based baseline, feature importance, CV).
-- Adds everything from the "NEW" script that actually improved precision
-  (regularization, isotonic calibration, tuned threshold).
-- Fills in model_input_schema.txt properly (was empty before).
-- Writes a single model_report.txt summary as required by the prototype rules.
-
-Run this from a folder containing road_risk_data_relabeled_noisy.csv.
-"""
-
 import pandas as pd
 import numpy as np
 import joblib
@@ -29,12 +15,10 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score, roc_auc_score, precision_recall_curve
 )
 
-DATA_PATH = "road_risk_data_relabeled_noisy.csv"
-CLASSIFICATION_THRESHOLD = 0.35  # chosen from the precision/recall sweep below - see report
+DATA_PATH = r"C:\Users\ayush\OneDrive\Documents\SIH\CIVANTA-SIH-PS-2\intelligence-data\ml-risk-engine\scripts\road_risk_data_relabeled_noisy.csv"
+CLASSIFICATION_THRESHOLD = 0.35  
 
-# ---------------------------------------------------------------------------
-# 1. Load & clean
-# ---------------------------------------------------------------------------
+
 df = pd.read_csv(DATA_PATH)
 rule_score = df["disruption_risk_score"].copy()
 
@@ -47,20 +31,14 @@ print(df["disruption_risk_score"].value_counts().sort_index())
 metadata_cols = [c for c in df.columns if c.startswith("metadata__")]
 df = df.drop(columns=metadata_cols + ["records__road_name"])
 
-# ---------------------------------------------------------------------------
-# 2. Leakage check - never let these into the feature set
-# ---------------------------------------------------------------------------
+
 leakage_cols = [
     "disruption_risk_score", "high_slope", "high_historical_landslide",
     "nearby_landslide", "high_rainfall",
 ]
 df = df.drop(columns=leakage_cols)
 
-# latitude/longitude deliberately EXCLUDED: routing/GIS teammate owns spatial
-# logic. This model only scores risk per road_id - it does not do
-# location-based reasoning itself. Keeping lat/long out avoids overlap with
-# their work and keeps this model a pure "given this road segment's
-# terrain/weather/history, how risky is it" scorer.
+
 FEATURES = [
     "records__road_type",
     "records__road_length_km", "records__elevation_m", "records__slope_deg",
@@ -74,9 +52,6 @@ X = df[FEATURES]
 y = df["disruption_occurred"]
 road_ids = df["records__road_id"]
 
-# ---------------------------------------------------------------------------
-# 3. Split
-# ---------------------------------------------------------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
@@ -94,11 +69,9 @@ preprocessor = ColumnTransformer([
     ("cat", categorical_pipeline, CATEGORICAL_FEATURES),
 ])
 
-results = {}  # model_name -> dict of metrics, for the final comparison table
+results = {}  
+#Rule
 
-# ---------------------------------------------------------------------------
-# 4. Rule-based baseline (not a model, just the existing 4-flag rule)
-# ---------------------------------------------------------------------------
 rule_pred_test = (rule_score.loc[X_test.index] >= 2).astype(int)
 results["Rule-based (score>=2)"] = {
     "precision": precision_score(y_test, rule_pred_test),
@@ -107,9 +80,9 @@ results["Rule-based (score>=2)"] = {
     "roc_auc": None,
 }
 
-# ---------------------------------------------------------------------------
-# 5. Baseline model - Logistic Regression
-# ---------------------------------------------------------------------------
+
+# Logistic Regression
+
 lr_model = Pipeline([("preprocessor", preprocessor), ("classifier", LogisticRegression(max_iter=1000))])
 lr_model.fit(X_train, y_train)
 lr_pred = lr_model.predict(X_test)
@@ -121,9 +94,9 @@ results["Logistic Regression"] = {
     "roc_auc": roc_auc_score(y_test, lr_prob),
 }
 
-# ---------------------------------------------------------------------------
-# 6. Comparison models - Random Forest, Decision Tree, untuned Gradient Boosting
-# ---------------------------------------------------------------------------
+
+#  Comparison b/w Random Forest, Decision Tree, untuned Gradient Boosting
+
 rf_model = Pipeline([("preprocessor", preprocessor),
                       ("classifier", RandomForestClassifier(n_estimators=300, random_state=42, class_weight="balanced"))])
 rf_model.fit(X_train, y_train)
@@ -160,15 +133,13 @@ results["Gradient Boosting (untuned)"] = {
     "roc_auc": roc_auc_score(y_test, gb_prob),
 }
 
-# Feature importance from the untuned Gradient Boosting (plain model, easy to read)
+
 feature_names = gb_untuned.named_steps["preprocessor"].get_feature_names_out()
 importances = gb_untuned.named_steps["classifier"].feature_importances_
 feature_importance = pd.DataFrame({"feature": feature_names, "importance": importances}) \
     .sort_values("importance", ascending=False)
 
-# ---------------------------------------------------------------------------
-# 7. 5-fold cross-validation on the untuned Gradient Boosting (stability check)
-# ---------------------------------------------------------------------------
+
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 gb_cv_pipeline = Pipeline([("preprocessor", preprocessor),
                             ("classifier", GradientBoostingClassifier(n_estimators=200, learning_rate=0.05, max_depth=3, random_state=42))])
@@ -176,10 +147,9 @@ cv_results = cross_validate(gb_cv_pipeline, X, y, cv=cv,
                              scoring={"precision": "precision", "recall": "recall", "f1": "f1", "roc_auc": "roc_auc"})
 cv_summary = {m: (cv_results[f"test_{m}"].mean(), cv_results[f"test_{m}"].std()) for m in ["precision", "recall", "f1", "roc_auc"]}
 
-# ---------------------------------------------------------------------------
+
 # 8. Improved model - regularized Gradient Boosting + isotonic calibration
-#    (this is what actually raised precision/recall together vs the untuned GB)
-# ---------------------------------------------------------------------------
+
 regularized_gb = GradientBoostingClassifier(
     n_estimators=100, learning_rate=0.01, max_depth=3, min_samples_leaf=20, random_state=42
 )
@@ -188,7 +158,7 @@ calibrated_model = CalibratedClassifierCV(estimator=calibrated_pipeline, method=
 calibrated_model.fit(X_train, y_train)
 calibrated_test_prob = calibrated_model.predict_proba(X_test)[:, 1]
 
-# threshold sweep, so the chosen threshold is documented, not just picked
+
 threshold_sweep = []
 for t in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60]:
     pred_t = (calibrated_test_prob >= t).astype(int)
@@ -207,9 +177,9 @@ results[f"Gradient Boosting (regularized + calibrated, thr={CLASSIFICATION_THRES
     "roc_auc": roc_auc_score(y_test, calibrated_test_prob),
 }
 
-# ---------------------------------------------------------------------------
-# 9. Final model - retrain the chosen (regularized + calibrated) model on ALL data
-# ---------------------------------------------------------------------------
+
+# Final model 
+
 final_regularized_gb = GradientBoostingClassifier(
     n_estimators=100, learning_rate=0.01, max_depth=3, min_samples_leaf=20, random_state=42
 )
@@ -221,9 +191,9 @@ all_prob = final_model.predict_proba(X)[:, 1]
 all_pred = (all_prob >= CLASSIFICATION_THRESHOLD).astype(int)
 all_risk_score = np.clip(all_prob * 100, 0, 100)
 
-# ---------------------------------------------------------------------------
-# 10. Outputs
-# ---------------------------------------------------------------------------
+
+# Outputs
+
 risk_output = pd.DataFrame({
     "road_id": road_ids,
     "risk_score": np.round(all_risk_score, 2),
@@ -246,7 +216,7 @@ joblib.dump({
     },
 }, "accessibility_risk_model.joblib")
 
-# ---- model_input_schema.txt ----
+
 schema_lines = [
     "P3 ML/Risk Engine - Model Input Schema",
     "",
@@ -286,7 +256,6 @@ schema_lines += [
 with open("model_input_schema.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(schema_lines))
 
-# ---- model_report.txt ----
 report_lines = []
 report_lines.append("P3 ML/Risk Engine - Model Report")
 report_lines.append("=" * 40)
@@ -315,14 +284,7 @@ for _, row in feature_importance.iterrows():
 report_lines.append("")
 report_lines.append("Risk score distribution (final model, whole dataset):")
 report_lines.append(risk_output["risk_score"].describe().to_string())
-report_lines.append("")
-report_lines.append("Notes:")
-report_lines.append("- disruption_occurred is a documented probabilistic proxy label, not real")
-report_lines.append("  historical incident data (see project README for the exact formula).")
-report_lines.append("- The rule-based baseline (score>=2) is included above because it is a")
-report_lines.append("  strong reference point given how the label was constructed - the ML")
-report_lines.append("  models are not expected to trivially beat it, and any gap should be")
-report_lines.append("  explained rather than hidden.")
+
 with open("model_report.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(report_lines))
 
