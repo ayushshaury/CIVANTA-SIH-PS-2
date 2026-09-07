@@ -98,7 +98,7 @@ Disruption Penalty
 Output
 
 ###The application generates:
-
+```
 Standard Shortest Route
         ↓
 Distance + Average Risk + Disrupted Roads
@@ -110,9 +110,10 @@ Distance + Average Risk + Disrupted Roads
 Route Comparison
         ↓
 Interactive GIS Map
+```
 
 ##The map displays:
-
+```
 Origin
 Destination
 Standard shortest route
@@ -129,13 +130,14 @@ Folium
 Streamlit-Folium
 OpenStreetMap
 Backend / Integration
+```
 
 The routing module currently operates as a Streamlit prototype.
 
 For integration into the main backend, the core routing logic in app.py can be separated into reusable routing functions or an API.
 
 ##The expected integration flow is:
-
+```
 User
  │
  ▼
@@ -177,8 +179,9 @@ Disruptions        Disruptions
             │
             ▼
     Interactive GIS Map
+```
 The ML team's road_risk_scores.csv acts as the risk input, while this module is responsible for:
-
+```
 GIS road-network processing
 Road ID matching
 Route calculation
@@ -200,6 +203,7 @@ Standard vs. risk-aware route comparison
 Interactive Folium map
 Streamlit routing interface
 Google authentication
+```
 
 ## Planned scope (from team roster)
 
