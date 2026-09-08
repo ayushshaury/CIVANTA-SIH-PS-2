@@ -21,8 +21,7 @@
 - GPS traces should follow the same shape as
   `intelligence-data/data-integration/outputs/gps_simulated.csv` for the
   same reason.
-- Once `backend-core` (Person 1) exposes ingestion APIs, this app should
+- Once `backend-core`  exposes ingestion APIs, this app should
   POST to those endpoints instead of writing to local CSV/SQLite only.
 
-This folder is a placeholder so the overall project structure reflects the
-full 6-person plan, even though this piece has not been built yet.
+
