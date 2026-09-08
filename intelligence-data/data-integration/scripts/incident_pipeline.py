@@ -1,21 +1,3 @@
-"""
-Incident data pipeline for PS 26002 Person 4 (Data Integration).
-
-Defines the structured format for incident reports and generates a small set
-of realistic sample records, keyed by road_id so it joins straight onto
-road_risk_data_monsoon.csv / roads_with_terrain.csv / gps_simulated.csv.
-
-This is NOT a live ingestion system. There's no field app sending real
-reports yet, so incidents are generated here as clearly-labeled synthetic
-samples, weighted toward roads that already look risky in the merged dataset
-(higher historical landslide count, steeper slope, heavier recent rainfall)
-so the sample set is at least plausible rather than pure random noise.
-
-Output: incidents_simulated.csv
-Columns: incident_id, road_id, timestamp, incident_type, severity,
-         description, source
-"""
-
 import random
 from datetime import datetime, timedelta
 
@@ -62,8 +44,7 @@ DESCRIPTION_TEMPLATES = {
 
 
 def risk_weight(row):
-    """Higher score for roads that already look risky in the merged dataset.
-    Purely for sampling weights, not a real risk model."""
+    
     score = 1.0
     score += row["historical_landslide_count"] * 2.0
     score += max(0, 5 - row["nearest_landslide_distance_km"]) * 0.5

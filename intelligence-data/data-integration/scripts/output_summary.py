@@ -1,12 +1,4 @@
-"""
-Output summary for PS 26002 Person 4 (Data Integration).
 
-Reads gps_simulated.csv and incidents_simulated.csv (both produced by
-simulate_gps.py and incident_pipeline.py) and prints a short combined summary:
-row counts, schema, sample rows, and road_id coverage against the original
-road_risk_data_monsoon.csv. This is the handoff snapshot for the team, not a
-report folder.
-"""
 
 import pandas as pd
 

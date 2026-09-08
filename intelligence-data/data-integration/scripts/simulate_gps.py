@@ -1,16 +1,3 @@
-"""
-GPS simulation for PS 26002 Person 4 (Data Integration).
-
-Generates a synthetic GPS trace for every road_id in roads_with_terrain.geojson
-by walking the real LineString geometry of the road, not a straight line between
-two endpoints. Each road gets one simulated "vehicle pass" with timestamps and
-speed, keyed by the existing road_id so it joins straight onto
-road_risk_data_monsoon.csv / roads_with_terrain.csv.
-
-Output: gps_simulated.csv
-Columns: road_id, vehicle_id, point_seq, timestamp, latitude, longitude,
-         speed_kmph, distance_along_road_km, source
-"""
 
 import json
 import math
@@ -22,11 +9,11 @@ import pandas as pd
 GEOJSON_PATH = "roads_with_terrain.geojson"
 OUTPUT_PATH = "gps_simulated.csv"
 
-SAMPLE_INTERVAL_SEC = 10          # how often we drop a GPS point
-SIM_START = datetime(2026, 7, 15, 6, 0, 0)  # arbitrary demo start time
+SAMPLE_INTERVAL_SEC = 10          
+SIM_START = datetime(2026, 7, 15, 6, 0, 0) 
 RANDOM_SEED = 42
 
-# rough speed assumptions for hilly Assam-Arunachal roads, km/h
+
 BASE_SPEED_KMPH = {
     "trunk": 45,
     "trunk_link": 35,
@@ -91,7 +78,7 @@ def simulate_road_trace(road_id, road_type, coords, sim_start_time):
     speed_kmph = max(5.0, base_speed * random.uniform(0.85, 1.15))
 
     if total_km == 0:
-        # degenerate road (single point or duplicate coords), still emit one row
+       
         lon, lat = coords[0]
         return [{
             "road_id": road_id,
