@@ -7,6 +7,7 @@ from .models import RiskScore
 
 CSV_PATH = (
     Path(__file__).resolve().parent.parent.parent
+    / "intelligence-data"
     / "ml-risk-engine"
     / "outputs"
     / "road_risk_scores.csv"
