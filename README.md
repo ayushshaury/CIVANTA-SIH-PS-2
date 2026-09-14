@@ -1,204 +1,250 @@
-# CIVANTA — AI-Based Smart Logistics and Accessibility Intelligence Platform for NER
+# CIVANTA : AI-Based Smart Logistics and Accessibility Intelligence Platform for NER
 
-**Problem Statement ID:** 26002
-**Title:** AI-Based Smart Logistics and Accessibility Intelligence Platform for North Eastern Region (NER)
-**Organization / Department:** Ministry of Development of North Eastern Region (MDoNER)
+> An AI/ML + GIS powered platform to monitor, predict, and route around logistics disruptions across India's North Eastern Region.
+
+**Smart India Hackathon 2026 - Problem Statement 26002**
+**Organization:** Ministry of Development of North Eastern Region (MDoNER)
 **Category:** Software
 **Theme:** Transportation & Logistics
 
-This repository is the merged codebase of two previously separate
-repositories (**CIVANTA-NER** — intelligence/data team, and **CIVANTA** —
-dashboard frontend team) into a single project, restructured around the
-6-person team plan below.
+---
+
+## Table of Contents
+
+- [Problem Statement](#problem-statement)
+- [The Complete Solution](#the-complete-solution)
+- [System Architecture](#system-architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Component Breakdown](#component-breakdown)
+- [Data Sources](#data-sources)
+- [Current Status](#current-status)
+- [Getting Started](#getting-started)
+- [Team](#team)
 
 ---
 
-## Problem Statement Summary
+## Problem Statement
 
-The North Eastern Region (NER) faces major logistics and accessibility
-challenges due to difficult terrain, extreme weather, limited transport
-connectivity, and frequent disruptions from landslides, floods, and
-infrastructure gaps. CIVANTA aims to provide an AI/ML + GIS powered
-platform that:
+The North Eastern Region (NER) faces major logistics and accessibility challenges from difficult terrain, extreme weather, limited transport connectivity, and frequent disruptions caused by landslides, floods, and infrastructure gaps. Transport of essential goods - medicines, food, construction materials, agricultural produce - to remote districts is regularly delayed, driving up costs and disrupting public services. No integrated platform currently exists to give real-time logistics visibility, route accessibility status, predictive disruption alerts, and optimized transport planning for the region.
 
-- Monitors real-time road, bridge, and transport accessibility
-- Predicts route disruptions from weather, terrain, and historical data
-- Suggests AI-based alternate routes and estimated delays
-- Tracks vehicles carrying essential goods via GPS
-- Generates automated alerts for blocked roads and high-risk corridors
-- Lets field officials upload geo-tagged updates from remote locations
-- Provides centralized dashboards for connectivity, bottlenecks, and
-  emergency accessibility
-- Supports multilingual notifications and offline sync for low-network areas
+CIVANTA is our answer: an AI-enabled logistics intelligence system built specifically for NER's terrain and connectivity constraints.
 
 ---
 
-## Team & Ownership
+## The Complete Solution
 
-| # | Name  | Role                    | Stack                                            | Folder in this repo                    | Status |
-|---|-------|-------------------------|---------------------------------------------------|-----------------------------------------|--------|
-| 1 | Khushi | Backend                | Python, FastAPI, PostgreSQL + PostGIS, Auth       | `backend-core/`                         | Not started — placeholder |
-| 2 | Anshu  | GIS + Routing           | OSM, PostGIS, Leaflet/MapLibre, OSRM/GraphHopper  | `gis-routing-engine/`                   | Not started — placeholder |
-| 3 | Ayush  | ML / Risk Engine        | Python, Pandas, NumPy, scikit-learn               | `intelligence-data/ml-risk-engine/`     | ✅ Done |
-| 4 | Rehan  | Data Integration        | Weather/terrain data, GPS simulation, incident pipeline | `intelligence-data/data-integration/` | ✅ Done |
-| 5 | Faiz   | Command Dashboard       | React + TypeScript/JS, Tailwind, Leaflet/MapLibre | `dashboard-frontend/`                   | ✅ Done (frontend, mock-data driven) |
-| 6 | Harsh  | Field App + GPS         | Flutter + Dart, GPS, Camera, SQLite/Drift         | `field-app/`                            | ❌ Not started — placeholder |
+CIVANTA, at full scope, does the following:
 
-**Teams:**
-- **Team 1 — Backend + GIS/Routing** (Khushi, Anshu): core platform + route engine. *Not part of the two source zips merged here; placeholders added so the structure matches the full plan.*
-- **Team 2 — ML + Data Integration** (Ayush, Rehan): intelligence + data pipeline. *Source: `CIVANTA-NER` repo.*
-- **Team 3 — Dashboard + Field App** (Faiz, Harsh): user-facing apps + demo. *Source: `CIVANTA` repo (dashboard only — the Flutter field app was not part of that repo and has not been built yet).*
+1. **Monitors** real-time road, bridge, and transport accessibility across NER districts and remote locations.
+2. **Predicts** route disruptions caused by landslides, floods, heavy rainfall, road damage, or traffic congestion, using a risk model trained on terrain, slope, and rainfall data.
+3. **Suggests** AI-based alternate routes with estimated travel delays whenever a segment is flagged high-risk or blocked.
+4. **Tracks** vehicles carrying essential commodities, medicines, agricultural produce, and construction materials via GPS.
+5. **Alerts** automatically on blocked roads, inaccessible regions, delayed deliveries, and high-risk transport corridors.
+6. **Enables field reporting** - local authorities and field officials upload geo-tagged updates, photos, and incident reports directly from remote locations, even offline.
+7. **Visualizes** everything on a centralized command dashboard: district-wise connectivity status, logistics bottlenecks, emergency/disaster-time accessibility routes, and real-time delivery status of essential supplies.
+8. **Supports** multilingual notifications and offline data synchronization, so the system works in the low-network conditions that define much of NER.
+
+This maps directly to the PS26002 requirements (a–h) and Expected Solution bullets — every capability above corresponds to an explicit line in the official problem statement.
 
 ---
 
-## Repository Structure
+## System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Sources["External Data Sources"]
+        OSM["OpenStreetMap<br/>Road Network"]
+        DEM["Copernicus DEM<br/>Elevation/Terrain"]
+        GSI["GSI Bhusanket + NRSC<br/>Landslide History"]
+        RAIN["CHIRPS / IMD<br/>Rainfall"]
+        WEATHER["Weather APIs<br/>(planned)"]
+    end
+
+    subgraph DataLayer["Data & Intelligence Layer"]
+        DI["Data Integration<br/>GPS + Incident Pipeline"]
+        ML["ML Risk Engine<br/>Accessibility Risk Score"]
+    end
+
+    subgraph CoreLayer["Core Platform"]
+        API["Backend API<br/>FastAPI + SQLAlchemy"]
+        DB[("Database<br/>PostgreSQL + PostGIS")]
+        ROUTE["GIS Routing Engine<br/>Risk-weighted route optimization"]
+    end
+
+    subgraph AppLayer["Applications"]
+        DASH["Command Dashboard<br/>React + Leaflet"]
+        FIELD["Field App<br/>Flutter — geo-tagged reporting"]
+    end
+
+    OSM --> DI
+    DEM --> DI
+    GSI --> DI
+    RAIN --> DI
+    WEATHER -.-> API
+
+    DI --> ML
+    ML --> API
+    DI --> API
+    API --> DB
+    API --> ROUTE
+    ROUTE --> API
+
+    API --> DASH
+    API --> FIELD
+    FIELD -->|geo-tagged incidents| API
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend (dashboard) | React 19, React Router, Vite, Tailwind CSS, Leaflet, Recharts, Axios |
+| Backend API | FastAPI, SQLAlchemy, Pydantic, bcrypt |
+| Database | PostgreSQL + PostGIS (spatial queries, road network storage) |
+| GIS / Routing | OSMnx, NetworkX, GeoPandas, Shapely, OSRM (production-scale routing) |
+| ML / Risk Engine | Python, pandas, NumPy, scikit-learn |
+| Field App | Flutter, Dart, GPS, Camera, local offline storage |
+| Data Sources | OpenStreetMap, Overpass Turbo, Copernicus DEM, GSI Bhusanket, NRSC Landslide Atlas, CHIRPS, IMD |
+| Infra (planned) | Cloud hosting, end-to-end encryption, RBAC, offline-first sync |
+
+---
+
+## Project Structure
 
 ```
 CIVANTA/
-├── README.md                          # This file
+├── README.md
 │
-├── intelligence-data/                 # Team 2 — from CIVANTA-NER
-│   ├── ml-risk-engine/                # Ayush — Accessibility Risk Score model
-│   │   ├── data/processed/            # training input
+├── intelligence-data/
+│   ├── ml-risk-engine/                    # Accessibility Risk Score model
+│   │   ├── data/processed/                # training input
 │   │   ├── scripts/train_risk_model.py
-│   │   ├── outputs/                   # trained model, scores, schema, report
-│   │   ├── predict_risk_score.py      # handoff function for backend/routing
+│   │   ├── outputs/                       # trained model, scores, schema, report
+│   │   ├── predict_risk_score.py          # handoff function for backend/routing
 │   │   └── README.md
 │   │
-│   └── data-integration/              # Rehan — road/terrain/rainfall + simulation
-│       ├── raw_data/                  # real OSM + DEM + GSI + CHIRPS data
-│       ├── scripts/                   # GPS simulation, incident pipeline, validation
-│       ├── outputs/                   # simulated GPS + incidents (clearly labeled)
+│   └── data-integration/                  # Road/terrain/rainfall + GPS/incident simulation
+│       ├── raw_data/                      # OSM + Copernicus DEM + GSI + CHIRPS data
+│       ├── scripts/                       # GPS simulation, incident pipeline, validation
+│       ├── outputs/                       # simulated GPS + incidents (clearly labeled)
 │       └── README.md
 │
-├── dashboard-frontend/                # Team 3 (Faiz) — from CIVANTA
+├── backend/
+│   └── app/
+│       ├── main.py                        # FastAPI entrypoint
+│       ├── database.py                    # DB engine/session
+│       ├── models.py                      # Road, RiskScore, User models
+│       ├── auth.py                        # register/login/session
+│       ├── roads.py                       # road data endpoints
+│       ├── risk.py                        # risk score endpoints
+│       ├── import_risk_data.py            # loads ML output into DB
+│       └── init_db.py                     # table creation
+│
+│
+├── gis-routing-engine/                    # Risk-weighted route optimization
+│   ├── app.py                             # Streamlit prototype (OSMnx/NetworkX)
+│   ├── requirements.txt
+│   └── STATUS.md
+│
+├── dashboard-frontend/                    # Command dashboard
 │   ├── src/
-│   │   ├── components/                # ui, layout, navbar, sidebar, ai
-│   │   ├── pages/                     # public, auth, user, admin
+│   │   ├── components/                    # ui, layout, navbar, sidebar, maps, ai
+│   │   ├── pages/                         # public, auth, user, admin
 │   │   ├── layouts/, routes/, context/
-│   │   ├── services/                  # API layer (Axios) — mock-data driven for now
-│   │   └── data/                      # mock data + i18n (6 languages)
+│   │   ├── services/                      # API layer (Axios)
+│   │   └── data/                          # mock data + i18n
 │   ├── package.json / vite.config.js
-│   └── README.md                      # full frontend setup guide (unchanged)
+│   └── README.md
 │
-├── field-app/                         # Team 3 (Harsh) — NOT built yet
-│   └── STATUS.md                      # planned scope + integration notes
-│
-├── backend-core/                      # Team 1 (Khushi) — NOT included in source zips
-│   └── STATUS.md                      # planned scope + integration notes
-│
-└── gis-routing-engine/                # Team 1 (Anshu) — NOT included in source zips
-    └── STATUS.md                      # planned scope + integration notes
+└── field-app/                             # Flutter field reporting app
+    └── STATUS.md
 ```
 
 ---
 
-## What Changed in This Merge
+## Component Breakdown
 
-- Combined two separate repositories (`CIVANTA-NER-main` and
-  `CIVANTA-main`) into one project tree, organized by function instead of
-  by original repo name.
-- Renamed top-level folders for clarity:
-  - `ml-risk-engine` + `data-integration` → grouped under `intelligence-data/`
-  - the React app (previously the repo root of `CIVANTA-main`) → `dashboard-frontend/`
-- Added placeholder folders (`backend-core/`, `gis-routing-engine/`,
-  `field-app/`) with `STATUS.md` files describing planned scope, so the
-  repo structure reflects the complete 6-person plan even though those
-  three pieces haven't been built yet.
-- Checked both source zips file-by-file (via checksum comparison) for
-  duplicate or conflicting files — **none were found**. No files were
-  deleted for being duplicates.
-- Removed one stray/junk file: a copy of `CIVANTA-main.zip` that was
-  accidentally nested inside the `CIVANTA-NER-main.zip` archive itself
-  (verified byte-identical to the actual `CIVANTA-main.zip`, so it carried
-  no unique content — nothing was lost by excluding it).
-- Updated ownership labels in the sub-READMEs and this root README to use
-  real names (Khushi, Anshu, Ayush, Rehan, Faiz, Harsh) instead of
-  "Person 1–6", while keeping each sub-project's original README content
-  intact otherwise.
+| Component | What it does at full scope |
+|---|---|
+| **Data Integration** | Merges real road, terrain, elevation, and rainfall data into a single dataset keyed by `road_id`; produces GPS traces and incident reports (clearly labeled real vs. simulated) that feed the risk model. |
+| **ML Risk Engine** | Scores every road segment for accessibility risk using terrain, slope, historical landslide, and rainfall features. Output consumed by both the backend and the routing engine. |
+| **Backend API** | Central source of truth - serves road, risk, incident, and user data to every other component; handles auth, RBAC, and data storage. |
+| **GIS Routing Engine** | Computes routes across the road network, weighting each edge by live risk score, so it can reroute around high-risk or blocked segments and estimate delays. |
+| **Command Dashboard** | The operations view for district administrators - connectivity status, bottlenecks, emergency routes, delivery tracking, all on one screen. |
+| **Field App** | Lets local officials and field staff report incidents (photos, geo-tag, description) from remote areas, including offline, syncing once connectivity returns. |
 
 ---
 
-## How the Pieces Fit Together (Data Flow)
+## Data Sources
 
-```
-raw_data (OSM, DEM, GSI, CHIRPS)
-        │
-        ▼
-data-integration/  ──────► road_risk_data_monsoon.csv, roads_with_terrain.geojson
-        │                          │
-        │ (simulated GPS/incidents, clearly labeled)
-        ▼                          ▼
-outputs/gps_simulated.csv   ml-risk-engine/  ──► accessibility_risk_model.joblib
-outputs/incidents_simulated.csv     │              road_risk_scores.csv
-        │                          ▼
-        │                  predict_risk_score.py  ◄── handoff for backend/routing
-        │                          │
-        ▼                          ▼
-   [field-app — pending]    [backend-core — pending] ◄──► [gis-routing-engine — pending]
-                                       │
-                                       ▼
-                            dashboard-frontend/ (React) — currently runs on mock data,
-                            API layer in src/services/ is ready to be pointed at
-                            backend-core once it exists.
-```
+| Data | Source | Used for |
+|---|---|---|
+| Road network | [OpenStreetMap](https://www.openstreetmap.org/) + [Overpass Turbo](https://overpass-turbo.eu/) | Road geometry, type, reference names |
+| Elevation / Terrain | [OpenTopography](https://opentopography.org/) + [Copernicus DEM (AWS Open Data)](https://registry.opendata.aws/copernicus-dem/) | Elevation raster, slope |
+| Historical landslides | [GSI Bhusanket](https://bhusanket.gsi.gov.in/) | Field-validated landslide inventory |
+| Landslide validation | [NRSC/ISRO Landslide Atlas](https://www.nrsc.gov.in/nrscnew/resources_atlas_landslide.php) | Cross-checking GSI inventory |
+| Rainfall | [CHIRPS](https://data.chc.ucsb.edu/products/CHIRPS-2.0/) + [IMD](https://mausam.imd.gov.in/) | Gridded/district precipitation |
+
+---
+
+## Current Status
+
+This section exists so anyone reading this repo - teammates, mentors, judges - knows exactly what's running today versus what's designed but not yet built. It will get shorter as we build.
+
+| Component | Status |
+|---|---|
+| Data Integration (road/terrain/rainfall merge, GPS + incident simulation) | ✅ Built |
+| ML Risk Engine | ✅ Built |
+| Backend API (FastAPI, roads/risk endpoints) | ⚠️ Partially built - SQLite, no auth enforcement yet |
+| GIS Routing Engine | ⚠️ Prototype built (OSMnx/NetworkX/Streamlit) - production routing (OSRM) planned |
+| Command Dashboard | ⚠️ UI built - currently running on mock data, live backend wiring in progress |
+| Field App | ❌ Not started |
+| PostgreSQL + PostGIS | ❌ Planned - current DB is SQLite |
+| Real-time alerts, weather API integration, RBAC, offline sync | ❌ Not started |
 
 ---
 
 ## Getting Started
 
-### Intelligence & Data (Team 2 — ready to run)
-
+**Backend**
 ```bash
-cd intelligence-data/ml-risk-engine
-python scripts/train_risk_model.py
+cd backend
+pip install fastapi uvicorn sqlalchemy pydantic bcrypt
+python -m app.init_db
+uvicorn app.main:app --reload
 ```
 
-```bash
-cd intelligence-data/data-integration
-python scripts/simulate_gps.py
-python scripts/incident_pipeline.py
-python scripts/output_summary.py
-```
-
-See `intelligence-data/ml-risk-engine/README.md` and
-`intelligence-data/data-integration/README.md` for full details on inputs,
-outputs, and join keys (`road_id`).
-
-### Dashboard Frontend (Team 3 — ready to run)
-
+**Dashboard**
 ```bash
 cd dashboard-frontend
 npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173`. Runs on mock data by default; see
-`dashboard-frontend/README.md` for the full setup guide, demo accounts,
-and how to point it at a real backend later.
-
-### Not Yet Available
-
-- `backend-core/` — no code yet, see `STATUS.md`
-- `gis-routing-engine/` — no code yet, see `STATUS.md`
-- `field-app/` — no code yet, see `STATUS.md`
+**GIS Routing Prototype**
+```bash
+cd gis-routing-engine
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ---
 
-## Notes on Data Authenticity
+## Team
 
-- `intelligence-data/data-integration/raw_data/` contains **real** road,
-  terrain (Copernicus DEM), landslide history (GSI), and rainfall
-  (CHIRPS) data.
-- `intelligence-data/data-integration/outputs/gps_simulated.csv` and
-  `incidents_simulated.csv` are **synthetic**, explicitly labeled
-  `source=simulated`, standing in for a live GPS tracker and field
-  incident app that don't exist yet (i.e., `field-app/`).
-- `dashboard-frontend` currently runs entirely on **mock data**
-  (`src/data/mockData.js`) until `backend-core` is built.
+**THE CODE CRUSADERS**
+| ➡️ | Name | 
+|---|---|
+| 1 | Ayush Shaurya |
+| 2 | Faiz Akhtar | 
+| 3 | Harsh Kumar | 
+| 4 | Rehan Ahmad | 
+| 5 | Khushi Singh | 
+| 6 | Anshu Kumari |
 
 ---
 
-## License
-
-Built for Smart India Hackathon — Problem Statement 26002, MDoNER.
+*Built for Smart India Hackathon 2026 - Problem Statement 26002.*
